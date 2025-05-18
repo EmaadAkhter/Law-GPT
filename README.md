@@ -85,7 +85,7 @@ law-gpt/
 
 - To adapt the UI theme, modify the CSS in `index.html`
 - To adjust model parameters, update the settings in `app.py`
-- To train on different legal texts, modify the data source in `Space.py`
+- To train on different legal texts, modify the data source in `gpt_training.py`
 
 ## License
 
