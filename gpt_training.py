@@ -1,37 +1,42 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, Trainer, TrainingArguments 
-from datasets import load_dataset, Dataset
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+    Trainer,
+    TrainingArguments
+)
+from datasets import Dataset
 import torch
-import os
 
-# Set device for M2 Mac
+# Set device: use MPS (Apple Silicon) if available
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
-# Load raw text corpus
+# Load raw text corpus from a .txt file and convert to HuggingFace Dataset
 def load_text_file(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         text = f.read()
     paragraphs = [para.strip() for para in text.split("\n") if para.strip()]
     return Dataset.from_dict({"text": paragraphs})
 
+# Load your law corpus
 dataset = load_text_file("law-of-crimes-sem--2-22-23.txt")
 
-# Format text (simple wrap)
+# Format each example (append newline to ensure better separation)
 def format_text(example):
     return {"text": f"{example['text']}\n"}
 
 dataset = dataset.map(format_text)
 
-#Load tokenizer and model
+# Load pre-trained tokenizer and model (DistilGPT2)
 model_name = "distilgpt2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-tokenizer.pad_token = tokenizer.eos_token  
+tokenizer.pad_token = tokenizer.eos_token  # GPT2 models do not have a pad token
 
 model = AutoModelForCausalLM.from_pretrained(model_name)
 model.resize_token_embeddings(len(tokenizer))
-model.config.pad_token_id = tokenizer.eos_token_id
+model.config.pad_token_id = tokenizer.eos_token_id  # Important for padding
 model.to(device)
 
-# Step 4: Tokenize dataset
+# Tokenization function: tokenize and set labels for causal language modeling
 def tokenize_function(example):
     tokens = tokenizer(
         example["text"],
@@ -42,14 +47,15 @@ def tokenize_function(example):
     tokens["labels"] = tokens["input_ids"].copy()
     return tokens
 
+# Apply tokenization
 tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=["text"])
 
-#Training arguments
+# Set up training arguments
 training_args = TrainingArguments(
     output_dir="./law_GPT_model",
     overwrite_output_dir=True,
-    per_device_train_batch_size=1,        
-    gradient_accumulation_steps=8,       
+    per_device_train_batch_size=1,              # Small batch size for MacBook memory
+    gradient_accumulation_steps=8,              # Accumulate gradients to simulate larger batch
     num_train_epochs=5,
     learning_rate=5e-5,
     warmup_steps=50,
@@ -57,14 +63,14 @@ training_args = TrainingArguments(
     logging_steps=100,
     save_steps=500,
     save_total_limit=2,
-    fp16=False,
+    fp16=False,                                 # MPS does not support FP16 yet
     bf16=False,
-    torch_compile=False,                   
+    torch_compile=False,                        # Can improve performance if True in some setups
     dataloader_pin_memory=False,
-    report_to="none"
+    report_to="none"                            # Disable WandB or other reporters
 )
 
-#Trainer
+# Define Trainer
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -72,10 +78,10 @@ trainer = Trainer(
     tokenizer=tokenizer,
 )
 
-#Train the model
+# Train the model
 trainer.train()
 
-#Save the final model
+# Save final model and tokenizer
 trainer.save_model("./law_GPT_model")
 tokenizer.save_pretrained("./law_GPT_model")
 
