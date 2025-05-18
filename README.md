@@ -76,6 +76,7 @@ law-gpt/
 ├── app.py                  # Flask application server
 ├── gpt_training.py         # Model training script
 ├── scraper.py              # Data processing utility
+├── data.txt  
 ├── templates/
 │   └── index.html          # Web interface
 └── law_GPT_model/          # Saved model directory
