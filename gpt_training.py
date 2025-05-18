@@ -18,7 +18,7 @@ def load_text_file(file_path):
     return Dataset.from_dict({"text": paragraphs})
 
 # Load your law corpus
-dataset = load_text_file("law-of-crimes-sem--2-22-23.txt")
+dataset = load_text_file("data.txt")
 
 # Format each example (append newline to ensure better separation)
 def format_text(example):
