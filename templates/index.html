@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Law GPT Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #ffffff; /* Light text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%; /* Full width */
+            position: relative; /* For positioning the input bar */
+        }
+        .chat-header {
+            background-color: #1f1f1f; /* Darker header */
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #181818; /* Slightly lighter than the body */
+            margin-bottom: 80px; /* Reserve space for the input bar */
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #ffffff; /* Light text */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%; /* Full width */
+        }
+        .chat-header {
+            background-color: #1f1f1f; /* Darker header */
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #181818; /* Slightly lighter than the body */
+        }
+        .chat-message {
+            margin: 10px 0;
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .chat-message.bot {
+            text-align: left;
+        }
+        .chat-message span {
+            display: inline-block;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        .chat-message.user span {
+            background: #007bff;
+            color: white;
+        }
+        .chat-message.bot span {
+            background: #333;
+            color: white;
+        }
+        .chat-input {
+        position: absolute;
+        bottom: 20%; /* Position the input bar 10% off the bottom */
+        left: 0;
+        right: 0;
+        width: 50%; /* Adjust the width as needed */
+        margin: 0 auto; /* Center the input bar horizontally */
+        display: flex;
+        background-color: #1f1f1f; /* Darker footer */
+        border-top: 1px solid #333; /* Seamless integration */
+    }
+    .chat-input input {
+        flex: 1;
+        padding: 10px; /* Reduced padding for a smaller input field */
+        border: none;
+        border-radius: 5px; /* Slightly rounded corners */
+        background-color: #121212;
+        color: white;
+        font-size: 1rem;
+    }
+    .chat-input input::placeholder {
+        color: #888;
+    }
+        .chat-input {
+            position: absolute;
+            bottom: 10%; /* Position the input bar 10% off the bottom */
+            left: 0;
+            width: 50%; /* Full width */
+            display: flex;
+            background-color: #1f1f1f; /* Darker footer */
+            border-top: 1px solid #333; /* Seamless integration */
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px; /* Reduced padding for a smaller input field */
+            border: none;
+            border-radius: 0; /* Removed border radius for a seamless look */
+            background-color: #121212;
+            color: white;
+            font-size: 1rem;
+        }
+        .chat-input input::placeholder {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Law GPT Chat</div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your question here..." onkeydown="handleKeyPress(event)">
+        </div>
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input");
+            const chatBox = document.getElementById("chat-box");
+
+            if (!userInput.value.trim()) return;
+
+            // Add user message to chat
+            const userMessage = document.createElement("div");
+            userMessage.className = "chat-message user";
+            userMessage.innerHTML = `<span>${userInput.value}</span>`;
+            chatBox.appendChild(userMessage);
+
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send the question to the server
+            const response = await fetch("/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: userInput.value }),
+            });
+
+            const data = await response.json();
+
+            // Add bot response to chat
+            const botMessage = document.createElement("div");
+            botMessage.className = "chat-message bot";
+            botMessage.innerHTML = `<span>${data.answer}</span>`;
+            chatBox.appendChild(botMessage);
+
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Clear input
+            userInput.value = "";
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
